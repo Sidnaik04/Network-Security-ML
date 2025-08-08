@@ -30,6 +30,12 @@ from sklearn.ensemble import (
     RandomForestClassifier,
 )
 
+import mlflow
+
+import dagshub
+
+# dagshub.init(repo_owner="Sidnaik04", repo_name="Network-Security-ML", mlflow=True)
+
 
 class ModelTrainer:
     def __init__(
@@ -42,6 +48,18 @@ class ModelTrainer:
             self.data_transformation_artifact = data_transformation_artifact
         except Exception as e:
             raise NetworkSecurityException(e, sys)
+
+    # track mlflow
+    def track_mlflow(self, best_model, classificationmetric):
+        with mlflow.start_run():
+            f1_score = classificationmetric.f1_score
+            precision_score = classificationmetric.precision_score
+            recall_score = classificationmetric.recall_score
+
+            mlflow.log_metric("f1_score", f1_score)
+            mlflow.log_metric("precision", precision_score)
+            mlflow.log_metric("recall_score", recall_score)
+            mlflow.sklearn.log_model(best_model, "model")
 
     # train model
     def train_model(self, X_train, y_train, x_test, y_test):
@@ -102,14 +120,14 @@ class ModelTrainer:
         )
 
         # Track the experiements with mlflow
-        # self.track_mlflow(best_model, classification_train_metric)
+        self.track_mlflow(best_model, classification_train_metric)
 
         y_test_pred = best_model.predict(x_test)
         classification_test_metric = get_classification_metric(
             y_true=y_test, y_pred=y_test_pred
         )
 
-        # self.track_mlflow(best_model, classification_test_metric)
+        self.track_mlflow(best_model, classification_test_metric)
 
         preprocessor = load_object(
             file_path=self.data_transformation_artifact.transformed_object_file_path
@@ -122,6 +140,7 @@ class ModelTrainer:
 
         Network_Model = NetworkModel(preprocessor=preprocessor, model=best_model)
         save_object(self.model_trainer_config.trained_model_file_path, obj=NetworkModel)
+        
         # model pusher
         save_object("final_model/model.pkl", best_model)
 
