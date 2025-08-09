@@ -13,6 +13,7 @@ class TrainingPipelineConfig:
         self.artifact_name = training_pipeline.ARTIFACT_DIR
         self.artifact_dir = os.path.join(self.artifact_name, timestamp)
         self.timestamp: str = timestamp
+        self.model_dir = os.path.join("final_model")
 
 
 class DataIngestionConfig:
@@ -123,7 +124,7 @@ class ModelTrainerConfig:
         self.trained_model_file_path: str = os.path.join(
             self.model_trainer_dir,
             training_pipeline.MODEL_TRAINER_TRAINED_MODEL_DIR,
-            training_pipeline.MODEL_FILE_NAME
+            training_pipeline.MODEL_FILE_NAME,
         )
 
         self.expected_accuracy: float = training_pipeline.MODEL_TRAINER_EXPECTED_SCORE
